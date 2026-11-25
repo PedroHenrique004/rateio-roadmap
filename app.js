@@ -72,7 +72,7 @@
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
   });
 
-  /* ---------- Markdown para colar no Notion ---------- */
+  /* ---------- Markdown do módulo, para colar em qualquer editor ---------- */
   function toMarkdown(m) {
     var L = [];
     L.push('# Módulo ' + m.id + ' · ' + m.title);
@@ -117,10 +117,10 @@
       var ok = false;
       try { ok = document.execCommand('copy'); } catch (e) {}
       document.body.removeChild(ta);
-      toast(ok ? 'Copiado! Cole no Notion.' : 'Não consegui copiar. Selecione e copie manualmente.');
+      toast(ok ? 'Copiado em Markdown!' : 'Não consegui copiar. Selecione e copie manualmente.');
     }
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () { toast('Copiado! Cole no Notion.'); }, fallback);
+      navigator.clipboard.writeText(text).then(function () { toast('Copiado em Markdown!'); }, fallback);
     } else { fallback(); }
   }
 
@@ -244,7 +244,7 @@
       '<div class="stretch"><b>Para ir além:</b> ' + esc(c.stretch) + '</div>' +
       '<div><h3>Reflexão</h3><ul class="reflect">' + c.reflect.map(function (q) { return '<li>' + esc(q) + '</li>'; }).join('') + '</ul></div>' +
       '<div class="ch-actions"><button class="btn' + (state.done[m.id] ? ' done' : '') + '" type="button" id="finish">' + (state.done[m.id] ? '✓ Desafio concluído' : 'Marcar desafio como concluído') + '</button>' +
-      '<button class="btn ghost" type="button" id="copy">Copiar para o Notion (Markdown)</button></div>' +
+      '<button class="btn ghost" type="button" id="copy">Copiar módulo em Markdown</button></div>' +
       '</div></article></section></div>';
 
     h += '<nav class="pager" aria-label="Navegar entre módulos">' +
