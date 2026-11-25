@@ -21,8 +21,9 @@ e abra <http://localhost:4173>. (Abrir o `index.html` direto também funciona na
 ## O que tem
 
 - Progresso salvo no navegador (objetivos, passos, critérios e desafio concluído).
-- Tema claro e escuro.
-- Botão **Copiar para o Notion (Markdown)** em cada módulo: cola direto numa página do Notion, com as caixas de seleção e as perguntas.
+- **Perguntas e respostas** na fase Investigar: você responde cada pergunta-guia com as suas palavras e registra as suas próprias dúvidas. Tudo é salvo sozinho no navegador.
+- Tema claro e escuro, com cores suaves para leitura longa (texto principal acima de 10:1 de contraste, nada de branco puro sobre preto).
+- Botão **Copiar para o Notion (Markdown)** em cada módulo: copia o módulo com as suas respostas, pronto para colar em qualquer editor de Markdown.
 
 ## Editar o conteúdo
 

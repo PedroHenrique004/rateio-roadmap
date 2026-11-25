@@ -5,11 +5,15 @@
   var KEY = 'roadmap:progress:v1';
 
   /* ---------- progresso (localStorage, com tolerância a falhas) ---------- */
-  var state = { checks: {}, done: {} };
+  var state = { checks: {}, done: {}, answers: {}, custom: {} };
   try {
     var raw = localStorage.getItem(KEY);
     if (raw) state = JSON.parse(raw);
   } catch (e) {}
+  state.checks = state.checks || {};
+  state.done = state.done || {};
+  state.answers = state.answers || {};
+  state.custom = state.custom || {};
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
   }
@@ -33,7 +37,10 @@
   function progressOf(m) {
     var keys = keysOf(m);
     var n = keys.filter(function (k) { return state.checks[k]; }).length;
-    return { n: n, total: keys.length, pct: keys.length ? n / keys.length : 0 };
+    var answered = m.guiding.filter(function (_, i) { return (state.answers[m.id + ':g' + i] || '').trim(); }).length;
+    n += answered;
+    var total = keys.length + m.guiding.length;
+    return { n: n, total: total, pct: total ? n / total : 0 };
   }
   function doneCount() { return R.modules.filter(function (m) { return state.done[m.id]; }).length; }
   function linkHtml(key) {
@@ -72,7 +79,15 @@
     L.push('', '## Objetivos de aprendizado');
     m.objectives.forEach(function (o) { L.push('- [ ] ' + o); });
     L.push('', '## Investigar · perguntas-guia');
-    m.guiding.forEach(function (q) { L.push('- ' + q); });
+    m.guiding.forEach(function (q, i) {
+      L.push('- ' + q);
+      var a = (state.answers[m.id + ':g' + i] || '').trim();
+      if (a) L.push('  - Minha resposta: ' + a.replace(/\n+/g, ' '));
+    });
+    (state.custom[m.id] || []).forEach(function (c) {
+      L.push('- ' + c.q + ' (minha pergunta)');
+      if ((c.a || '').trim()) L.push('  - Minha resposta: ' + c.a.trim().replace(/\n+/g, ' '));
+    });
     L.push('', '## Estudar');
     m.study.forEach(function (s) {
       L.push('### ' + s.title);
@@ -128,9 +143,9 @@
       '</svg><div class="ring-label"><div><b>' + done + '/' + total + '</b><br><span>desafios</span></div></div></div></section>';
 
     html += '<section class="cbl-strip" aria-label="As três fases do ciclo">' +
-      step(1, 'Engajar', 'Ideia central, pergunta essencial e o desafio que vira o objetivo.', '#3341E8') +
-      step(2, 'Investigar', 'Perguntas-guia e o conteúdo exato para estudar, sem excesso.', '#14B386') +
-      step(3, 'Agir', 'Construa, confira com critérios claros de "pronto" e reflita.', '#FF5C93') +
+      step(1, 'Engajar', 'Ideia central, pergunta essencial e o desafio que vira o objetivo.', '#4A58C7') +
+      step(2, 'Investigar', 'Perguntas-guia e o conteúdo exato para estudar, sem excesso.', '#2B8570') +
+      step(3, 'Agir', 'Construa, confira com critérios claros de "pronto" e reflita.', '#B84F73') +
       '</section>';
 
     R.phases.forEach(function (p) {
@@ -183,18 +198,28 @@
     h += '<nav class="stepper" aria-label="Fases do módulo"><a href="#/m/' + m.id + '" data-s="engajar">1 · Engajar</a><a href="#/m/' + m.id + '" data-s="investigar">2 · Investigar</a><a href="#/m/' + m.id + '" data-s="agir">3 · Agir</a></nav>';
 
     /* Engajar */
-    h += '<section class="sec" id="engajar"><div class="sec-label"><b>1</b> Engajar</div><h2>Por que isto importa</h2>' +
+    h += '<section class="sec" id="engajar"><div class="sec-label"><b>1</b> Engajar</div><h2>Por que isto importa</h2><p class="hint">Leia as três ideias e marque o que você quer aprender neste módulo.</p>' +
       '<div class="trio">' +
       '<div class="panel"><h3>Ideia central</h3><p>' + esc(m.engage.bigIdea) + '</p></div>' +
       '<div class="panel q"><h3>Pergunta essencial</h3><p>' + esc(m.engage.question) + '</p></div>' +
       '<div class="panel"><h3>Desafio</h3><p>' + esc(m.engage.challenge) + '</p></div></div>' +
-      '<h3 style="margin:28px 0 12px;font-size:22px">Objetivos de aprendizado</h3>' + checks('o', m.objectives) + '</section>';
+      '<h3 class="sub">Objetivos de aprendizado</h3>' + checks('o', m.objectives) + '</section>';
 
     /* Investigar */
     h += '<section class="sec" id="investigar"><div class="sec-label"><b>2</b> Investigar</div><h2>O que estudar</h2>' +
-      '<h3 style="margin:0 0 12px;font-size:20px">Perguntas-guia</h3><ul class="qlist">' + m.guiding.map(function (q) { return '<li>' + esc(q) + '</li>'; }).join('') + '</ul>';
+      '<p class="hint">Responda com as suas palavras. O texto é salvo sozinho neste navegador.</p>' +
+      '<h3 class="sub">Perguntas-guia <span class="count" id="ans-count"></span></h3>' +
+      '<div class="qa-list">' + m.guiding.map(function (q, i) {
+        var k = m.id + ':g' + i;
+        return '<div class="qa"><label for="a' + k.replace(':', '-') + '" class="qa-q"><span class="qmark" aria-hidden="true">?</span><span>' + esc(q) + '</span></label>' +
+          '<textarea id="a' + k.replace(':', '-') + '" data-a="' + k + '" rows="2" placeholder="Sua resposta…">' + esc(state.answers[k] || '') + '</textarea></div>';
+      }).join('') + '</div>' +
+      '<h3 class="sub">Minhas perguntas</h3>' +
+      '<p class="hint">Escreveu uma dúvida enquanto estudava? Registre aqui e responda quando descobrir.</p>' +
+      '<div id="custom-list" class="qa-list"></div>' +
+      '<form class="add-q" id="add-q"><input type="text" id="new-q" placeholder="Escreva uma pergunta sua…" maxlength="240" aria-label="Nova pergunta"><button class="btn small" type="submit">Adicionar</button></form>';
     h += '<div class="study">' + m.study.map(function (s) {
-      return '<div class="panel"><h3 style="font-family:var(--display);font-size:22px;letter-spacing:-.02em;text-transform:none;color:var(--ink);margin-bottom:10px">' + esc(s.title) + '</h3><ul style="margin:0 0 12px;padding-left:20px;display:grid;gap:6px">' +
+      return '<div class="panel"><h3 class="st">' + esc(s.title) + '</h3><ul>' +
         s.points.map(function (t) { return '<li>' + rich(t) + '</li>'; }).join('') + '</ul>' +
         (s.links ? '<div class="links">' + s.links.map(linkHtml).join('') + '</div>' : '') + '</div>';
     }).join('') + '</div>';
@@ -233,6 +258,61 @@
       toast(state.done[m.id] ? 'Desafio concluído. Bom trabalho!' : 'Desafio reaberto.');
     });
     document.getElementById('copy').addEventListener('click', function () { copyText(toMarkdown(m)); });
+
+    /* perguntas e respostas */
+    function grow(el) { el.style.height = 'auto'; el.style.height = Math.max(el.scrollHeight, 64) + 'px'; }
+    function updateCount() {
+      var n = m.guiding.filter(function (_, i) { return (state.answers[m.id + ':g' + i] || '').trim(); }).length;
+      var el = document.getElementById('ans-count');
+      if (el) el.textContent = n + ' de ' + m.guiding.length + ' respondidas';
+    }
+    var timer;
+    app.querySelectorAll('textarea[data-a]').forEach(function (ta) {
+      grow(ta);
+      ta.addEventListener('input', function () {
+        grow(ta);
+        state.answers[ta.getAttribute('data-a')] = ta.value;
+        updateCount();
+        clearTimeout(timer); timer = setTimeout(save, 300);
+      });
+    });
+    updateCount();
+
+    function renderCustom() {
+      var list = state.custom[m.id] || [];
+      var box = document.getElementById('custom-list');
+      box.innerHTML = list.map(function (c, i) {
+        return '<div class="qa"><div class="qa-q"><span class="qmark mine" aria-hidden="true">?</span><span>' + esc(c.q) + '</span>' +
+          '<button type="button" class="x" data-del="' + i + '" aria-label="Remover pergunta">×</button></div>' +
+          '<textarea data-c="' + i + '" rows="2" placeholder="Sua resposta…" aria-label="Resposta da pergunta ' + (i + 1) + '">' + esc(c.a || '') + '</textarea></div>';
+      }).join('');
+      box.querySelectorAll('textarea[data-c]').forEach(function (ta) {
+        grow(ta);
+        ta.addEventListener('input', function () {
+          grow(ta);
+          list[parseInt(ta.getAttribute('data-c'), 10)].a = ta.value;
+          clearTimeout(timer); timer = setTimeout(save, 300);
+        });
+      });
+      box.querySelectorAll('[data-del]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (!confirm('Remover esta pergunta e a resposta?')) return;
+          list.splice(parseInt(b.getAttribute('data-del'), 10), 1);
+          state.custom[m.id] = list; save(); renderCustom();
+        });
+      });
+    }
+    renderCustom();
+    document.getElementById('add-q').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var inp = document.getElementById('new-q');
+      var q = inp.value.trim();
+      if (!q) return;
+      (state.custom[m.id] = state.custom[m.id] || []).push({ q: q, a: '' });
+      inp.value = ''; save(); renderCustom();
+      var tas = document.querySelectorAll('#custom-list textarea');
+      if (tas.length) tas[tas.length - 1].focus();
+    });
 
     // destaca a fase visível no stepper
     var links = app.querySelectorAll('.stepper a');

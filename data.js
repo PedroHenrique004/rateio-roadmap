@@ -2,10 +2,10 @@
    Engajar (ideia central, pergunta essencial, desafio) → Investigar (perguntas-guia, estudar) → Agir (desafio). */
 window.ROADMAP = {
   phases: [
-    { id: 'a', name: 'Fundamentos', blurb: 'Ambiente, Kotlin, domínio com testes e coroutines.', color: '#3341E8' },
-    { id: 'b', name: 'Telas e módulo compartilhado', blurb: 'Compose, o módulo shared, persistência e as duas UIs nativas.', color: '#14B386' },
-    { id: 'c', name: 'Evoluir o produto', blurb: 'Novas versões do app: contato e tipos editáveis.', color: '#FF5C93' },
-    { id: 'd', name: 'Acabamento e além', blurb: 'Qualidade, portfólio e a versão com rede.', color: '#F59E0B' },
+    { id: 'a', name: 'Fundamentos', blurb: 'Ambiente, Kotlin, domínio com testes e coroutines.', color: '#4A58C7' },
+    { id: 'b', name: 'Telas e módulo compartilhado', blurb: 'Compose, o módulo shared, persistência e as duas UIs nativas.', color: '#2B8570' },
+    { id: 'c', name: 'Evoluir o produto', blurb: 'Novas versões do app: contato e tipos editáveis.', color: '#B84F73' },
+    { id: 'd', name: 'Acabamento e além', blurb: 'Qualidade, portfólio e a versão com rede.', color: '#9C6A17' },
   ],
 
   links: {
