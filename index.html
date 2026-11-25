@@ -28,6 +28,7 @@
       <span class="brand-text">Rateio <small>roadmap</small></span>
     </a>
     <nav class="top-actions" aria-label="Ações">
+      <button class="chip-btn sync" id="sync-btn" type="button" aria-haspopup="dialog"><span class="dot" id="sync-dot" aria-hidden="true"></span><span id="sync-label">Sincronizar</span></button>
       <button class="chip-btn" id="open-cbl" type="button">O que é CBL?</button>
       <button class="icon-btn" id="theme" type="button" aria-label="Alternar tema claro e escuro">
         <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path class="sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m0-11.32L4.93 4.93m14.14 14.14-1.41-1.41M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="moon" d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
@@ -52,8 +53,63 @@
     </form>
   </dialog>
 
+  <dialog id="auth" aria-labelledby="auth-title">
+    <div class="dlg">
+      <h2 id="auth-title">Salvar na nuvem</h2>
+      <p class="muted">Entre com seu e-mail para o progresso, as respostas e as suas perguntas ficarem salvos num banco de dados e aparecerem em qualquer computador.</p>
+
+      <div id="auth-off" hidden>
+        <p class="notice">A nuvem ainda não está configurada neste site. Falta preencher o <code>config.js</code> com o endereço e a chave do seu projeto Supabase (passo a passo no README). Enquanto isso, tudo continua salvo neste navegador e você pode usar o backup em arquivo abaixo.</p>
+      </div>
+
+      <form id="auth-form" hidden>
+        <label class="field">E-mail<input type="email" id="auth-email-in" autocomplete="email" required></label>
+        <label class="field">Senha<input type="password" id="auth-pass" autocomplete="current-password" minlength="6" required></label>
+        <div class="row">
+          <button class="btn small" type="submit" data-act="in">Entrar</button>
+          <button class="btn ghost small" type="submit" data-act="up">Criar conta</button>
+        </div>
+        <p id="auth-msg" class="msg" role="status"></p>
+      </form>
+
+      <div id="auth-in" hidden>
+        <p>Conectado como <b id="auth-email"></b>.</p>
+        <p id="auth-status" class="muted" role="status"></p>
+        <div class="row">
+          <button class="btn small" type="button" id="sync-now">Sincronizar agora</button>
+          <button class="btn ghost small" type="button" id="sign-out">Sair</button>
+        </div>
+      </div>
+
+      <hr>
+      <h3>Backup em arquivo</h3>
+      <p class="muted">Baixe tudo em um arquivo JSON ou restaure a partir dele. Serve de segurança mesmo sem conta.</p>
+      <div class="row">
+        <button class="btn ghost small" type="button" id="export">Exportar JSON</button>
+        <label class="btn ghost small file">Importar JSON<input type="file" id="import" accept="application/json,.json" hidden></label>
+      </div>
+      <form method="dialog" class="close-row"><button class="btn ghost small">Fechar</button></form>
+    </div>
+  </dialog>
+
+  <dialog id="conflict" aria-labelledby="conflict-title">
+    <div class="dlg">
+      <h2 id="conflict-title">Duas versões diferentes</h2>
+      <p>Este computador e a nuvem têm progresso diferente. Como você quer resolver?</p>
+      <div class="choices">
+        <button class="btn small" type="button" data-choice="merge">Juntar as duas (recomendado)</button>
+        <button class="btn ghost small" type="button" data-choice="cloud">Usar a versão da nuvem</button>
+        <button class="btn ghost small" type="button" data-choice="local">Usar a versão deste computador</button>
+      </div>
+      <p class="muted">"Juntar" mantém as marcações de ambos e guarda as duas respostas quando forem diferentes. Nada se perde.</p>
+    </div>
+  </dialog>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="sync.js"></script>
   <script src="data.js"></script>
   <script src="app.js"></script>
 </body>
