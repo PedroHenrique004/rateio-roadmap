@@ -292,12 +292,6 @@ footer.foot, p.foot { margin: 64px auto 0; color: var(--ink-soft); font-size: 15
 }
 
 /* sincronização */
-.chip-btn.sync { display: inline-flex; align-items: center; gap: 8px; }
-.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-soft); flex: none; }
-.dot.ok { background: var(--ok); }
-.dot.saving { background: var(--tag); animation: pulse 1s infinite alternate; }
-.dot.error, .dot.conflict { background: #c9605f; }
-@keyframes pulse { from { opacity: 0.35; } to { opacity: 1; } }
 .dlg h3 { font-size: 20px; margin: 4px 0 6px; }
 .dlg hr { border: 0; border-top: 1px solid var(--line); margin: 24px 0 18px; }
 .dlg code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 0.9em; background: var(--paper); padding: 1px 6px; border-radius: 6px; }
@@ -309,4 +303,3 @@ footer.foot, p.foot { margin: 64px auto 0; color: var(--ink-soft); font-size: 15
 .msg { min-height: 1.4em; margin: 12px 0 0; font-size: 15px; color: var(--ink-soft); }
 .btn.file { cursor: pointer; }
 .close-row { margin-top: 20px; text-align: right; }
-.choices { display: grid; gap: 10px; margin: 16px 0; }

@@ -17,10 +17,18 @@
   function persist() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
   }
-  // salva neste navegador e, se houver login, também no banco
-  function save() {
-    persist();
-    if (window.Sync) window.Sync.touch();
+  // salva neste navegador
+  function save() { persist(); }
+
+  // garante a forma do progresso (usado ao importar um backup)
+  function normalize(s) {
+    s = s && typeof s === 'object' ? s : {};
+    return {
+      checks: s.checks && typeof s.checks === 'object' ? s.checks : {},
+      done: s.done && typeof s.done === 'object' ? s.done : {},
+      answers: s.answers && typeof s.answers === 'object' ? s.answers : {},
+      custom: s.custom && typeof s.custom === 'object' ? s.custom : {},
+    };
   }
 
   /* ---------- utilitários ---------- */
@@ -340,76 +348,12 @@
   }
 
 
-  /* ---------- nuvem (Supabase) e backup ---------- */
-  (function wireSync() {
-    var Sync = window.Sync;
-    if (!Sync) return;
+  /* ---------- backup em arquivo ---------- */
+  (function wireBackup() {
     var $ = function (id) { return document.getElementById(id); };
-    var authDlg = $('auth'), conflictDlg = $('conflict');
-    var current = { status: 'off', email: '', message: '' };
-    var LABEL = { off: 'Sincronizar', out: 'Entrar', saving: 'Salvando…', ok: 'Sincronizado', error: 'Sem sincronizar', conflict: 'Conflito' };
-
+    var dlg = $('backup');
     function open(d) { if (d.showModal) d.showModal(); else d.setAttribute('open', ''); }
-    function close(d) { if (d.close) d.close(); else d.removeAttribute('open'); }
-
-    function paint() {
-      var st = current.status;
-      $('sync-label').textContent = LABEL[st] || 'Sincronizar';
-      $('sync-dot').className = 'dot ' + st;
-      var logged = !!Sync.user();
-      $('auth-off').hidden = Sync.enabled;
-      $('auth-form').hidden = !Sync.enabled || logged;
-      $('auth-in').hidden = !Sync.enabled || !logged;
-      if (logged) $('auth-email').textContent = Sync.user().email || current.email;
-      var text = { ok: 'Tudo salvo na nuvem.', saving: 'Salvando…', error: 'Não foi possível sincronizar: ' + current.message + '. Seus dados continuam salvos neste navegador.', conflict: 'Há versões diferentes. Escolha como resolver.' }[st] || '';
-      $('auth-status').textContent = text;
-    }
-
-    var HELP = { 'Invalid login credentials': 'E-mail ou senha incorretos.', 'Email not confirmed': 'Confirme o e-mail pelo link que enviamos e entre de novo.', 'User already registered': 'Este e-mail já tem conta. Use "Entrar".' };
-    function msg(t) { $('auth-msg').textContent = HELP[t] || t || ''; }
-
-    Sync.init({
-      getState: function () { return state; },
-      setState: function (st) { state = Sync.normalize(st); persist(); route(true); },
-      onStatus: function (st, info) {
-        current.status = st;
-        if (info && info.email) current.email = info.email;
-        current.message = (info && info.message) || '';
-        paint();
-      },
-      askConflict: function (cb) {
-        function done(ev) {
-          var c = ev.target.getAttribute('data-choice');
-          if (!c) return;
-          conflictDlg.removeEventListener('click', done);
-          close(conflictDlg);
-          cb(c);
-        }
-        conflictDlg.addEventListener('click', done);
-        open(conflictDlg);
-      },
-    });
-    conflictDlg.addEventListener('cancel', function (e) { e.preventDefault(); }); // precisa escolher
-
-    $('sync-btn').addEventListener('click', function () { msg(''); paint(); open(authDlg); });
-
-    $('auth-form').addEventListener('submit', function (ev) {
-      ev.preventDefault();
-      var act = ev.submitter && ev.submitter.getAttribute('data-act') === 'up' ? 'up' : 'in';
-      var email = $('auth-email-in').value.trim(), pass = $('auth-pass').value;
-      msg('Aguarde…');
-      var p = act === 'up' ? Sync.signUp(email, pass) : Sync.signIn(email, pass);
-      p.then(function (r) {
-        if (r.error) { msg(r.error.message); return; }
-        if (act === 'up' && !(r.data && r.data.session)) { msg('Conta criada. Enviamos um e-mail de confirmação: clique no link e depois volte e entre.'); return; }
-        $('auth-pass').value = ''; msg('');
-        paint(); close(authDlg); toast('Conectado. Sincronizando…');
-      }, function (e) { msg((e && e.message) || 'Não foi possível conectar.'); });
-    });
-    $('sync-now').addEventListener('click', function () { Sync.syncNow(); });
-    $('sign-out').addEventListener('click', function () {
-      Sync.signOut().then(function () { paint(); toast('Você saiu. O progresso continua neste navegador.'); });
-    });
+    $('backup-btn').addEventListener('click', function () { open(dlg); });
 
     $('export').addEventListener('click', function () {
       var blob = new Blob([JSON.stringify({ app: 'rateio-roadmap', version: 1, exportedAt: new Date().toISOString(), data: state }, null, 2)], { type: 'application/json' });
@@ -428,14 +372,13 @@
       rd.onload = function () {
         try {
           var obj = JSON.parse(rd.result);
-          var data = Sync.normalize(obj && obj.data ? obj.data : obj);
+          var data = normalize(obj && obj.data ? obj.data : obj);
           if (!confirm('Substituir o progresso deste navegador pelo conteúdo do arquivo?')) return;
           state = data; save(); route(true); toast('Progresso restaurado.');
         } catch (e) { toast('Arquivo inválido.'); }
       };
       rd.readAsText(f);
     });
-    paint();
   })();
 
   /* ---------- rotas ---------- */
